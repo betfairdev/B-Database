@@ -1,0 +1,30 @@
+{
+  "name": "@metadata-platform/core",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "typeorm": "^0.3.17",
+    "reflect-metadata": "^0.1.13",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.1",
+    "uuid": "^9.0.1",
+    "lodash": "^4.17.21",
+    "rxjs": "^7.8.1",
+    "yjs": "^13.6.8"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.7",
+    "@types/lodash": "^4.14.202",
+    "@types/jest": "^29.5.8"
+  }
+}
