@@ -16,7 +16,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@dbmanager/core": "workspace:*",
+    "@dbmanager/core": "1.0.0",
     "typeorm": "^0.3.25",
     "pg": "^8.16.3"
   },

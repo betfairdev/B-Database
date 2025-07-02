@@ -10,8 +10,8 @@
     "docker:run": "docker run -p 3000:3000 dbmanager-sync-server"
   },
   "dependencies": {
-    "@dbmanager/core": "workspace:*",
-    "@dbmanager/adapter-node-postgres": "workspace:*",
+    "@dbmanager/core": "1.0.0",
+    "@dbmanager/adapter-node-postgres": "1.0.0",
     "express": "^5.1.0",
     "cors": "^2.8.5",
     "helmet": "^8.1.0",

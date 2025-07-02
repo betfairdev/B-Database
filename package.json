@@ -4,8 +4,6 @@
   "version": "1.0.0",
   "workspaces": [
     "packages/*",
-    "packages/core",
-    "packages/adapters/*",
     "applications/*"
   ],
   "scripts": {
