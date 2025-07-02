@@ -1,4 +1,4 @@
-# DBManager - Virtual Database Manager
+# DBManager - Virtual Database Manager 
 
 A production-ready, TypeScript-based virtual database manager library with metadata-driven dynamic schema management, real-time synchronization, and multi-environment support.
 
