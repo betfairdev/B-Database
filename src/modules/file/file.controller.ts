@@ -1,10 +1,15 @@
 import {
   Controller,
   Get,
+  Post,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Param,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { FileService } from './file.service';
 import { FirebaseAuthGuard } from '../auth/guards/firebase-auth.guard';
 import { WorkspaceGuard } from '../auth/guards/workspace.guard';
@@ -39,5 +44,25 @@ export class FileController {
     );
 
     return { uploadUrl };
+  }
+
+  @Post('upload/:workspaceId/:tableId/:rowId/:fieldId')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload file directly' })
+  async uploadFile(
+    @Param('workspaceId') workspaceId: string,
+    @Param('tableId') tableId: string,
+    @Param('rowId') rowId: string,
+    @Param('fieldId') fieldId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.fileService.processFileUpload(
+      workspaceId,
+      tableId,
+      rowId,
+      fieldId,
+      file,
+    );
   }
 }

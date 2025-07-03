@@ -55,25 +55,13 @@ const commonOptions: Partial<DataSourceOptions> = {
   synchronize: SYNC,
   logging: LOGGING,
   entities: [
-    join(__dirname,
-      ENV === "production"
-        ? "entities/*.js"
-        : "entities/*.ts"
-    ),
+    join(__dirname, "entities/*.{ts,js}"),
   ],
   migrations: [
-    join(__dirname,
-      ENV === "production"
-        ? "migrations/*.js"
-        : "migrations/*.ts"
-    ),
+    join(__dirname, "database/migrations/*.{ts,js}"),
   ],
   subscribers: [
-    join(__dirname,
-      ENV === "production"
-        ? "subscribers/*.js"
-        : "subscribers/*.ts"
-    ),
+    join(__dirname, "**/*.subscriber.{ts,js}"),
   ],
 };
 

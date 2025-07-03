@@ -11,6 +11,7 @@ import { DataRowModule } from './modules/data-row/data-row.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { FileModule } from './modules/file/file.module';
 import { MinioModule } from './modules/minio/minio.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MinioModule } from './modules/minio/minio.module';
     SyncModule,
     FileModule,
     MinioModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

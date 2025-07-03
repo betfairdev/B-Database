@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { RateLimiterInterceptor } from './common/interceptors/rate-limiter.interceptor';
 import { initializeDatabase } from './dbconfig';
 
 async function bootstrap() {
@@ -21,7 +23,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global pipes and filters
+  // Global pipes, filters, and interceptors
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -30,6 +32,10 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new RateLimiterInterceptor(configService),
+  );
 
   // Swagger documentation
   const config = new DocumentBuilder()
@@ -37,6 +43,15 @@ async function bootstrap() {
     .setDescription('Production-grade NestJS backend with offline-first sync')
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('workspaces', 'Workspace management')
+    .addTag('table-schemas', 'Table schema management')
+    .addTag('field-schemas', 'Field schema management')
+    .addTag('relationships', 'Table relationships')
+    .addTag('data-rows', 'Data row operations')
+    .addTag('sync', 'Offline sync endpoints')
+    .addTag('files', 'File management')
+    .addTag('health', 'Health check endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
