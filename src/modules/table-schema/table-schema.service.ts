@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { TableSchema } from '../../entities/table-schema.entity';
 import { CreateTableSchemaDto } from './dto/create-table-schema.dto';
 import { UpdateTableSchemaDto } from './dto/update-table-schema.dto';

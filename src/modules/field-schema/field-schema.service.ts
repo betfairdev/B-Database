@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { FieldSchema } from '../../entities/field-schema.entity';
 import { CreateFieldSchemaDto } from './dto/create-field-schema.dto';
 import { UpdateFieldSchemaDto } from './dto/update-field-schema.dto';

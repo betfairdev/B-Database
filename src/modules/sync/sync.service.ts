@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getRepository, AppDataSource } from '../../../dbconfig';
+import { getRepository, AppDataSource } from '../../dbconfig';
 import { SyncLog } from '../../entities/sync-log.entity';
 import { DataRow } from '../../entities/data-row.entity';
 import { DataHistory } from '../../entities/data-history.entity';

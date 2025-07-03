@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { Workspace } from '../../entities/workspace.entity';
 import { WorkspaceUserRole } from '../../entities/workspace-user-role.entity';
 import { User } from '../../entities/user.entity';

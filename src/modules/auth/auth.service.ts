@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { User } from '../../entities/user.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 

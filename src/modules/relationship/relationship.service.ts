@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { Relationship } from '../../entities/relationship.entity';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
 import { UpdateRelationshipDto } from './dto/update-relationship.dto';

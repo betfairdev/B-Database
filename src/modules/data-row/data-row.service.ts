@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { getRepository } from '../../../dbconfig';
+import { getRepository } from '../../dbconfig';
 import { DataRow } from '../../entities/data-row.entity';
 import { DataHistory } from '../../entities/data-history.entity';
 import { User } from '../../entities/user.entity';
