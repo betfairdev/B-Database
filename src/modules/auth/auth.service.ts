@@ -1,38 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { User } from '../../entities/user.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
     private firebaseService: FirebaseService,
   ) {}
 
   async validateFirebaseToken(idToken: string): Promise<User> {
     const decodedToken = await this.firebaseService.verifyIdToken(idToken);
+    const userRepository = getRepository(User);
     
-    let user = await this.userRepository.findOne({
+    let user = await userRepository.findOne({
       where: { firebaseUid: decodedToken.uid },
     });
 
     if (!user) {
-      user = this.userRepository.create({
+      user = userRepository.create({
         firebaseUid: decodedToken.uid,
         email: decodedToken.email,
         displayName: decodedToken.name,
         photoURL: decodedToken.picture,
       });
-      await this.userRepository.save(user);
+      await userRepository.save(user);
     }
 
     return user;
   }
 
   async findUserById(id: string): Promise<User> {
-    return this.userRepository.findOne({ where: { id } });
+    const userRepository = getRepository(User);
+    return userRepository.findOne({ where: { id } });
   }
 }

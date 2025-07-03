@@ -5,8 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { initializeDatabase } from './dbconfig';
 
 async function bootstrap() {
+  // Initialize database first
+  await initializeDatabase();
+
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 

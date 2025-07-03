@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { getRepository, AppDataSource } from '../../../dbconfig';
 import { SyncLog } from '../../entities/sync-log.entity';
 import { DataRow } from '../../entities/data-row.entity';
 import { DataHistory } from '../../entities/data-history.entity';
@@ -13,13 +12,6 @@ import { ConflictResolverService } from './conflict-resolver.service';
 @Injectable()
 export class SyncService {
   constructor(
-    @InjectRepository(SyncLog)
-    private syncLogRepository: Repository<SyncLog>,
-    @InjectRepository(DataRow)
-    private dataRowRepository: Repository<DataRow>,
-    @InjectRepository(DataHistory)
-    private dataHistoryRepository: Repository<DataHistory>,
-    private dataSource: DataSource,
     private conflictResolver: ConflictResolverService,
   ) {}
 
@@ -28,7 +20,7 @@ export class SyncService {
     const results = [];
     const serverTime = new Date();
 
-    await this.dataSource.transaction(async (manager) => {
+    await AppDataSource.transaction(async (manager) => {
       for (const change of changes) {
         try {
           const result = await this.processChange(
@@ -58,7 +50,8 @@ export class SyncService {
     const { workspaceId, since, clientId } = pullSyncDto;
     const serverTime = new Date();
 
-    const queryBuilder = this.syncLogRepository
+    const syncLogRepository = getRepository(SyncLog);
+    const queryBuilder = syncLogRepository
       .createQueryBuilder('syncLog')
       .where('syncLog.workspaceId = :workspaceId', { workspaceId });
 

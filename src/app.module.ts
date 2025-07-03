@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { DatabaseConfigService } from './config/database.config';
 import { FirebaseModule } from './modules/firebase/firebase.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
@@ -19,9 +17,6 @@ import { MinioModule } from './modules/minio/minio.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-    }),
-    TypeOrmModule.forRootAsync({
-      useClass: DatabaseConfigService,
     }),
     ThrottlerModule.forRoot([
       {

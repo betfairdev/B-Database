@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { Workspace } from '../../entities/workspace.entity';
 import { WorkspaceUserRole } from '../../entities/workspace-user-role.entity';
 import { User } from '../../entities/user.entity';
@@ -11,28 +10,24 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class WorkspaceService {
-  constructor(
-    @InjectRepository(Workspace)
-    private workspaceRepository: Repository<Workspace>,
-    @InjectRepository(WorkspaceUserRole)
-    private workspaceUserRoleRepository: Repository<WorkspaceUserRole>,
-  ) {}
-
   async create(createWorkspaceDto: CreateWorkspaceDto, user: User): Promise<Workspace> {
-    const workspace = this.workspaceRepository.create({
+    const workspaceRepository = getRepository(Workspace);
+    const workspaceUserRoleRepository = getRepository(WorkspaceUserRole);
+
+    const workspace = workspaceRepository.create({
       ...createWorkspaceDto,
       ownerId: user.id,
     });
 
-    const savedWorkspace = await this.workspaceRepository.save(workspace);
+    const savedWorkspace = await workspaceRepository.save(workspace);
 
     // Create owner role
-    const ownerRole = this.workspaceUserRoleRepository.create({
+    const ownerRole = workspaceUserRoleRepository.create({
       userId: user.id,
       workspaceId: savedWorkspace.id,
       role: Role.OWNER,
     });
-    await this.workspaceUserRoleRepository.save(ownerRole);
+    await workspaceUserRoleRepository.save(ownerRole);
 
     return savedWorkspace;
   }
@@ -41,7 +36,8 @@ export class WorkspaceService {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.workspaceRepository
+    const workspaceRepository = getRepository(Workspace);
+    const queryBuilder = workspaceRepository
       .createQueryBuilder('workspace')
       .innerJoin('workspace.userRoles', 'userRole')
       .where('userRole.userId = :userId', { userId: user.id });
@@ -76,7 +72,8 @@ export class WorkspaceService {
   }
 
   async findOne(id: string, user: User): Promise<Workspace> {
-    const workspace = await this.workspaceRepository
+    const workspaceRepository = getRepository(Workspace);
+    const workspace = await workspaceRepository
       .createQueryBuilder('workspace')
       .innerJoin('workspace.userRoles', 'userRole')
       .where('workspace.id = :id', { id })
@@ -91,10 +88,13 @@ export class WorkspaceService {
   }
 
   async update(id: string, updateWorkspaceDto: UpdateWorkspaceDto, user: User): Promise<Workspace> {
+    const workspaceRepository = getRepository(Workspace);
+    const workspaceUserRoleRepository = getRepository(WorkspaceUserRole);
+
     const workspace = await this.findOne(id, user);
     
     // Check if user is owner
-    const userRole = await this.workspaceUserRoleRepository.findOne({
+    const userRole = await workspaceUserRoleRepository.findOne({
       where: { userId: user.id, workspaceId: id },
     });
 
@@ -103,14 +103,17 @@ export class WorkspaceService {
     }
 
     Object.assign(workspace, updateWorkspaceDto);
-    return this.workspaceRepository.save(workspace);
+    return workspaceRepository.save(workspace);
   }
 
   async remove(id: string, user: User): Promise<void> {
+    const workspaceRepository = getRepository(Workspace);
+    const workspaceUserRoleRepository = getRepository(WorkspaceUserRole);
+
     const workspace = await this.findOne(id, user);
     
     // Check if user is owner
-    const userRole = await this.workspaceUserRoleRepository.findOne({
+    const userRole = await workspaceUserRoleRepository.findOne({
       where: { userId: user.id, workspaceId: id },
     });
 
@@ -118,12 +121,14 @@ export class WorkspaceService {
       throw new ForbiddenException('Only workspace owners can delete workspace');
     }
 
-    await this.workspaceRepository.remove(workspace);
+    await workspaceRepository.remove(workspace);
   }
 
   async addUserToWorkspace(workspaceId: string, userId: string, role: Role, currentUser: User): Promise<WorkspaceUserRole> {
+    const workspaceUserRoleRepository = getRepository(WorkspaceUserRole);
+
     // Check if current user is owner
-    const currentUserRole = await this.workspaceUserRoleRepository.findOne({
+    const currentUserRole = await workspaceUserRoleRepository.findOne({
       where: { userId: currentUser.id, workspaceId },
     });
 
@@ -131,21 +136,21 @@ export class WorkspaceService {
       throw new ForbiddenException('Only workspace owners can add users');
     }
 
-    const existingRole = await this.workspaceUserRoleRepository.findOne({
+    const existingRole = await workspaceUserRoleRepository.findOne({
       where: { userId, workspaceId },
     });
 
     if (existingRole) {
       existingRole.role = role;
-      return this.workspaceUserRoleRepository.save(existingRole);
+      return workspaceUserRoleRepository.save(existingRole);
     }
 
-    const newRole = this.workspaceUserRoleRepository.create({
+    const newRole = workspaceUserRoleRepository.create({
       userId,
       workspaceId,
       role,
     });
 
-    return this.workspaceUserRoleRepository.save(newRole);
+    return workspaceUserRoleRepository.save(newRole);
   }
 }

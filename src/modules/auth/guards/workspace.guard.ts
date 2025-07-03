@@ -5,18 +5,12 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../../dbconfig';
 import { WorkspaceUserRole } from '../../../entities/workspace-user-role.entity';
 import { Role } from '../../../common/enums/role.enum';
 
 @Injectable()
 export class WorkspaceGuard implements CanActivate {
-  constructor(
-    @InjectRepository(WorkspaceUserRole)
-    private workspaceUserRoleRepository: Repository<WorkspaceUserRole>,
-  ) {}
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
@@ -30,7 +24,8 @@ export class WorkspaceGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const userRole = await this.workspaceUserRoleRepository.findOne({
+    const workspaceUserRoleRepository = getRepository(WorkspaceUserRole);
+    const userRole = await workspaceUserRoleRepository.findOne({
       where: {
         userId: user.id,
         workspaceId,

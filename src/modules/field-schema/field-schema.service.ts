@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { FieldSchema } from '../../entities/field-schema.entity';
 import { CreateFieldSchemaDto } from './dto/create-field-schema.dto';
 import { UpdateFieldSchemaDto } from './dto/update-field-schema.dto';
@@ -8,21 +7,18 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class FieldSchemaService {
-  constructor(
-    @InjectRepository(FieldSchema)
-    private fieldSchemaRepository: Repository<FieldSchema>,
-  ) {}
-
   async create(createFieldSchemaDto: CreateFieldSchemaDto): Promise<FieldSchema> {
-    const fieldSchema = this.fieldSchemaRepository.create(createFieldSchemaDto);
-    return this.fieldSchemaRepository.save(fieldSchema);
+    const fieldSchemaRepository = getRepository(FieldSchema);
+    const fieldSchema = fieldSchemaRepository.create(createFieldSchemaDto);
+    return fieldSchemaRepository.save(fieldSchema);
   }
 
   async findAll(tableId: string, paginationDto: PaginationDto) {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.fieldSchemaRepository
+    const fieldSchemaRepository = getRepository(FieldSchema);
+    const queryBuilder = fieldSchemaRepository
       .createQueryBuilder('field')
       .where('field.tableId = :tableId', { tableId });
 
@@ -56,7 +52,8 @@ export class FieldSchemaService {
   }
 
   async findOne(id: string, tableId: string): Promise<FieldSchema> {
-    const field = await this.fieldSchemaRepository.findOne({
+    const fieldSchemaRepository = getRepository(FieldSchema);
+    const field = await fieldSchemaRepository.findOne({
       where: { id, tableId },
     });
 
@@ -68,19 +65,22 @@ export class FieldSchemaService {
   }
 
   async update(id: string, updateFieldSchemaDto: UpdateFieldSchemaDto, tableId: string): Promise<FieldSchema> {
+    const fieldSchemaRepository = getRepository(FieldSchema);
     const field = await this.findOne(id, tableId);
     Object.assign(field, updateFieldSchemaDto);
-    return this.fieldSchemaRepository.save(field);
+    return fieldSchemaRepository.save(field);
   }
 
   async remove(id: string, tableId: string): Promise<void> {
+    const fieldSchemaRepository = getRepository(FieldSchema);
     const field = await this.findOne(id, tableId);
-    await this.fieldSchemaRepository.remove(field);
+    await fieldSchemaRepository.remove(field);
   }
 
   async reorderFields(tableId: string, fieldOrders: { id: string; order: number }[]): Promise<void> {
+    const fieldSchemaRepository = getRepository(FieldSchema);
     for (const { id, order } of fieldOrders) {
-      await this.fieldSchemaRepository.update({ id, tableId }, { order });
+      await fieldSchemaRepository.update({ id, tableId }, { order });
     }
   }
 }

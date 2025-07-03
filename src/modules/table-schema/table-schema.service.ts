@@ -1,29 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { TableSchema } from '../../entities/table-schema.entity';
-import { User } from '../../entities/user.entity';
 import { CreateTableSchemaDto } from './dto/create-table-schema.dto';
 import { UpdateTableSchemaDto } from './dto/update-table-schema.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class TableSchemaService {
-  constructor(
-    @InjectRepository(TableSchema)
-    private tableSchemaRepository: Repository<TableSchema>,
-  ) {}
-
   async create(createTableSchemaDto: CreateTableSchemaDto): Promise<TableSchema> {
-    const tableSchema = this.tableSchemaRepository.create(createTableSchemaDto);
-    return this.tableSchemaRepository.save(tableSchema);
+    const tableSchemaRepository = getRepository(TableSchema);
+    const tableSchema = tableSchemaRepository.create(createTableSchemaDto);
+    return tableSchemaRepository.save(tableSchema);
   }
 
   async findAll(workspaceId: string, paginationDto: PaginationDto) {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.tableSchemaRepository
+    const tableSchemaRepository = getRepository(TableSchema);
+    const queryBuilder = tableSchemaRepository
       .createQueryBuilder('table')
       .where('table.workspaceId = :workspaceId', { workspaceId });
 
@@ -57,7 +52,8 @@ export class TableSchemaService {
   }
 
   async findOne(id: string, workspaceId: string): Promise<TableSchema> {
-    const table = await this.tableSchemaRepository.findOne({
+    const tableSchemaRepository = getRepository(TableSchema);
+    const table = await tableSchemaRepository.findOne({
       where: { id, workspaceId },
       relations: ['fields'],
     });
@@ -70,13 +66,15 @@ export class TableSchemaService {
   }
 
   async update(id: string, updateTableSchemaDto: UpdateTableSchemaDto, workspaceId: string): Promise<TableSchema> {
+    const tableSchemaRepository = getRepository(TableSchema);
     const table = await this.findOne(id, workspaceId);
     Object.assign(table, updateTableSchemaDto);
-    return this.tableSchemaRepository.save(table);
+    return tableSchemaRepository.save(table);
   }
 
   async remove(id: string, workspaceId: string): Promise<void> {
+    const tableSchemaRepository = getRepository(TableSchema);
     const table = await this.findOne(id, workspaceId);
-    await this.tableSchemaRepository.remove(table);
+    await tableSchemaRepository.remove(table);
   }
 }

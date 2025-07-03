@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { Relationship } from '../../entities/relationship.entity';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
 import { UpdateRelationshipDto } from './dto/update-relationship.dto';
@@ -8,21 +7,18 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class RelationshipService {
-  constructor(
-    @InjectRepository(Relationship)
-    private relationshipRepository: Repository<Relationship>,
-  ) {}
-
   async create(createRelationshipDto: CreateRelationshipDto): Promise<Relationship> {
-    const relationship = this.relationshipRepository.create(createRelationshipDto);
-    return this.relationshipRepository.save(relationship);
+    const relationshipRepository = getRepository(Relationship);
+    const relationship = relationshipRepository.create(createRelationshipDto);
+    return relationshipRepository.save(relationship);
   }
 
   async findAll(workspaceId: string, paginationDto: PaginationDto) {
     const { page, limit, sortBy, sortOrder } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.relationshipRepository
+    const relationshipRepository = getRepository(Relationship);
+    const queryBuilder = relationshipRepository
       .createQueryBuilder('relationship')
       .leftJoinAndSelect('relationship.sourceTable', 'sourceTable')
       .leftJoinAndSelect('relationship.sourceField', 'sourceField')
@@ -52,7 +48,8 @@ export class RelationshipService {
   }
 
   async findOne(id: string): Promise<Relationship> {
-    const relationship = await this.relationshipRepository.findOne({
+    const relationshipRepository = getRepository(Relationship);
+    const relationship = await relationshipRepository.findOne({
       where: { id },
       relations: ['sourceTable', 'sourceField', 'destinationTable'],
     });
@@ -65,13 +62,15 @@ export class RelationshipService {
   }
 
   async update(id: string, updateRelationshipDto: UpdateRelationshipDto): Promise<Relationship> {
+    const relationshipRepository = getRepository(Relationship);
     const relationship = await this.findOne(id);
     Object.assign(relationship, updateRelationshipDto);
-    return this.relationshipRepository.save(relationship);
+    return relationshipRepository.save(relationship);
   }
 
   async remove(id: string): Promise<void> {
+    const relationshipRepository = getRepository(Relationship);
     const relationship = await this.findOne(id);
-    await this.relationshipRepository.remove(relationship);
+    await relationshipRepository.remove(relationship);
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getRepository } from '../../../dbconfig';
 import { DataRow } from '../../entities/data-row.entity';
 import { DataHistory } from '../../entities/data-history.entity';
 import { User } from '../../entities/user.entity';
@@ -10,21 +9,15 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class DataRowService {
-  constructor(
-    @InjectRepository(DataRow)
-    private dataRowRepository: Repository<DataRow>,
-    @InjectRepository(DataHistory)
-    private dataHistoryRepository: Repository<DataHistory>,
-  ) {}
-
   async create(createDataRowDto: CreateDataRowDto, user: User): Promise<DataRow> {
-    const dataRow = this.dataRowRepository.create({
+    const dataRowRepository = getRepository(DataRow);
+    const dataRow = dataRowRepository.create({
       ...createDataRowDto,
       ownerId: user.id,
       versionVector: { [user.id]: 1 },
     });
 
-    const savedDataRow = await this.dataRowRepository.save(dataRow);
+    const savedDataRow = await dataRowRepository.save(dataRow);
     await this.createHistoryEntry(savedDataRow);
     return savedDataRow;
   }
@@ -33,7 +26,8 @@ export class DataRowService {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.dataRowRepository
+    const dataRowRepository = getRepository(DataRow);
+    const queryBuilder = dataRowRepository
       .createQueryBuilder('dataRow')
       .where('dataRow.tableId = :tableId', { tableId })
       .andWhere('dataRow.deletedAt IS NULL');
@@ -68,7 +62,8 @@ export class DataRowService {
   }
 
   async findOne(id: string, tableId: string): Promise<DataRow> {
-    const dataRow = await this.dataRowRepository.findOne({
+    const dataRowRepository = getRepository(DataRow);
+    const dataRow = await dataRowRepository.findOne({
       where: { id, tableId, deletedAt: null },
     });
 
@@ -80,6 +75,7 @@ export class DataRowService {
   }
 
   async update(id: string, updateDataRowDto: UpdateDataRowDto, tableId: string, user: User): Promise<DataRow> {
+    const dataRowRepository = getRepository(DataRow);
     const dataRow = await this.findOne(id, tableId);
     
     // Update version vector
@@ -90,18 +86,22 @@ export class DataRowService {
     };
 
     Object.assign(dataRow, updateDataRowDto);
-    const savedDataRow = await this.dataRowRepository.save(dataRow);
+    const savedDataRow = await dataRowRepository.save(dataRow);
     await this.createHistoryEntry(savedDataRow);
     return savedDataRow;
   }
 
   async softDelete(id: string, tableId: string): Promise<void> {
+    const dataRowRepository = getRepository(DataRow);
     const dataRow = await this.findOne(id, tableId);
-    await this.dataRowRepository.softDelete(id);
+    await dataRowRepository.softDelete(id);
   }
 
   async hardDelete(id: string, tableId: string): Promise<void> {
-    const dataRow = await this.dataRowRepository.findOne({
+    const dataRowRepository = getRepository(DataRow);
+    const dataHistoryRepository = getRepository(DataHistory);
+
+    const dataRow = await dataRowRepository.findOne({
       where: { id, tableId },
       withDeleted: true,
     });
@@ -111,14 +111,15 @@ export class DataRowService {
     }
 
     // Delete history entries
-    await this.dataHistoryRepository.delete({ dataRowId: id });
+    await dataHistoryRepository.delete({ dataRowId: id });
     
     // Delete the data row
-    await this.dataRowRepository.delete(id);
+    await dataRowRepository.delete(id);
   }
 
   async restore(id: string, tableId: string): Promise<DataRow> {
-    const dataRow = await this.dataRowRepository.findOne({
+    const dataRowRepository = getRepository(DataRow);
+    const dataRow = await dataRowRepository.findOne({
       where: { id, tableId },
       withDeleted: true,
     });
@@ -127,14 +128,15 @@ export class DataRowService {
       throw new NotFoundException('Data row not found');
     }
 
-    await this.dataRowRepository.restore(id);
+    await dataRowRepository.restore(id);
     return this.findOne(id, tableId);
   }
 
   async getHistory(id: string, tableId: string): Promise<DataHistory[]> {
     await this.findOne(id, tableId);
     
-    return this.dataHistoryRepository.find({
+    const dataHistoryRepository = getRepository(DataHistory);
+    return dataHistoryRepository.find({
       where: { dataRowId: id },
       order: { createdAt: 'DESC' },
       take: 10,
@@ -142,27 +144,28 @@ export class DataRowService {
   }
 
   private async createHistoryEntry(dataRow: DataRow): Promise<void> {
-    const historyEntry = this.dataHistoryRepository.create({
+    const dataHistoryRepository = getRepository(DataHistory);
+    const historyEntry = dataHistoryRepository.create({
       dataRowId: dataRow.id,
       payload: dataRow.payload,
       versionVector: dataRow.versionVector,
     });
 
-    await this.dataHistoryRepository.save(historyEntry);
+    await dataHistoryRepository.save(historyEntry);
 
     // Keep only last 10 versions
-    const historyCount = await this.dataHistoryRepository.count({
+    const historyCount = await dataHistoryRepository.count({
       where: { dataRowId: dataRow.id },
     });
 
     if (historyCount > 10) {
-      const oldestEntries = await this.dataHistoryRepository.find({
+      const oldestEntries = await dataHistoryRepository.find({
         where: { dataRowId: dataRow.id },
         order: { createdAt: 'ASC' },
         take: historyCount - 10,
       });
 
-      await this.dataHistoryRepository.remove(oldestEntries);
+      await dataHistoryRepository.remove(oldestEntries);
     }
   }
 }

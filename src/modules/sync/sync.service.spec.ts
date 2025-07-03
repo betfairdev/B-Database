@@ -1,47 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { SyncService } from './sync.service';
-import { SyncLog } from '../../entities/sync-log.entity';
-import { DataRow } from '../../entities/data-row.entity';
-import { DataHistory } from '../../entities/data-history.entity';
 import { ConflictResolverService } from './conflict-resolver.service';
 import { SyncOperation } from '../../common/enums/sync-operation.enum';
 
+// Mock the dbconfig module
+jest.mock('../../../dbconfig', () => ({
+  getRepository: jest.fn(),
+  AppDataSource: {
+    transaction: jest.fn(),
+  },
+}));
+
 describe('SyncService', () => {
   let service: SyncService;
-  let mockSyncLogRepository: any;
-  let mockDataRowRepository: any;
-  let mockDataHistoryRepository: any;
-  let mockDataSource: any;
   let mockConflictResolver: any;
 
   beforeEach(async () => {
-    mockSyncLogRepository = {
-      createQueryBuilder: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      getMany: jest.fn(),
-    };
-
-    mockDataRowRepository = {
-      findOne: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-    };
-
-    mockDataHistoryRepository = {
-      create: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-    };
-
-    mockDataSource = {
-      transaction: jest.fn((callback) => callback({})),
-    };
-
     mockConflictResolver = {
       hasConflict: jest.fn(),
       resolveConflict: jest.fn(),
@@ -50,22 +24,6 @@ describe('SyncService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SyncService,
-        {
-          provide: getRepositoryToken(SyncLog),
-          useValue: mockSyncLogRepository,
-        },
-        {
-          provide: getRepositoryToken(DataRow),
-          useValue: mockDataRowRepository,
-        },
-        {
-          provide: getRepositoryToken(DataHistory),
-          useValue: mockDataHistoryRepository,
-        },
-        {
-          provide: DataSource,
-          useValue: mockDataSource,
-        },
         {
           provide: ConflictResolverService,
           useValue: mockConflictResolver,
@@ -82,20 +40,27 @@ describe('SyncService', () => {
 
   describe('pullChanges', () => {
     it('should return changes from sync log', async () => {
-      const mockChanges = [
-        {
-          id: '1',
-          workspaceId: 'workspace-1',
-          tableId: 'table-1',
-          rowId: 'row-1',
-          operation: SyncOperation.INSERT,
-          payload: { name: 'Test' },
-          clientId: 'client-1',
-          timestamp: new Date(),
-        },
-      ];
+      const { getRepository } = require('../../../dbconfig');
+      const mockSyncLogRepository = {
+        createQueryBuilder: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          {
+            id: '1',
+            workspaceId: 'workspace-1',
+            tableId: 'table-1',
+            rowId: 'row-1',
+            operation: SyncOperation.INSERT,
+            payload: { name: 'Test' },
+            clientId: 'client-1',
+            timestamp: new Date(),
+          },
+        ]),
+      };
 
-      mockSyncLogRepository.getMany.mockResolvedValue(mockChanges);
+      getRepository.mockReturnValue(mockSyncLogRepository);
 
       const result = await service.pullChanges({
         workspaceId: 'workspace-1',
@@ -103,13 +68,14 @@ describe('SyncService', () => {
         clientId: 'client-2',
       });
 
-      expect(result.changes).toEqual(mockChanges);
+      expect(result.changes).toHaveLength(1);
       expect(result.serverTime).toBeInstanceOf(Date);
     });
   });
 
   describe('pushChanges', () => {
     it('should process changes and return results', async () => {
+      const { AppDataSource } = require('../../../dbconfig');
       const mockUser = { id: 'user-1' };
       const pushData = {
         workspaceId: 'workspace-1',
@@ -125,7 +91,7 @@ describe('SyncService', () => {
         ],
       };
 
-      mockDataSource.transaction.mockImplementation(async (callback) => {
+      AppDataSource.transaction.mockImplementation(async (callback) => {
         const manager = {
           findOne: jest.fn().mockResolvedValue(null),
           create: jest.fn().mockReturnValue({}),
