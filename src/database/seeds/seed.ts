@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { AppDataSource } from '../../config/database.config';
+import { AppDataSource } from '../../dbconfig';
 import { User } from '../../entities/user.entity';
 import { Workspace } from '../../entities/workspace.entity';
 import { WorkspaceUserRole } from '../../entities/workspace-user-role.entity';

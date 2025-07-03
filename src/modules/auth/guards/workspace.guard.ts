@@ -5,7 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { getRepository } from '../../../../dbconfig';
+import { getRepository } from '../../../dbconfig';
 import { WorkspaceUserRole } from '../../../entities/workspace-user-role.entity';
 import { Role } from '../../../common/enums/role.enum';
 

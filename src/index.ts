@@ -2,6 +2,11 @@
 import "dotenv/config";
 import { initializeDatabase, closeDatabase } from "./dbconfig";
 
+// This file is not used as the main entry point
+// The NestJS application is bootstrapped in src/main.ts
+// Commenting out the executable code to prevent compilation errors
+
+/*
 // Initialize database before starting server
 initializeDatabase()
   .then(() => {
@@ -36,3 +41,4 @@ initializeDatabase()
     console.error("❌ Failed to initialize database:", err);
     process.exit(1);
   });
+*/
