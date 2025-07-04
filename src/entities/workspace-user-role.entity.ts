@@ -24,7 +24,7 @@ export class WorkspaceUserRole {
   workspaceId: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: Role,
     default: Role.VIEWER,
   })

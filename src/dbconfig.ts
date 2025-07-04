@@ -1,10 +1,13 @@
 // src/dbconfig.ts
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import "reflect-metadata";
 import { DataSource, DataSourceOptions, Repository, ObjectLiteral } from "typeorm";
 import { join } from "path";
 
 // Read common env vars
-const DB_TYPE = (process.env.DB_TYPE as DataSourceOptions["type"]) || "postgres";
+const DB_TYPE = (process.env.DB_TYPE as DataSourceOptions["type"]) || "mysql";
 const SYNC = process.env.TYPEORM_SYNC === "true";
 const LOGGING = process.env.TYPEORM_LOGGING === "true";
 const ENV = process.env.NODE_ENV || "development";
@@ -77,6 +80,7 @@ export const AppDataSource = new DataSource(dataSourceOptions);
 // Initialization guard
 let initialized = false;
 export async function initializeDatabase(): Promise<void> {
+  console.log(`🔄 Initializing database connection (${DB_TYPE})...`);
   if (initialized) return;
   try {
     await AppDataSource.initialize();

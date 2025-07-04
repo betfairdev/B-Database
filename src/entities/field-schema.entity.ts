@@ -22,7 +22,7 @@ export class FieldSchema {
   displayName: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: FieldType,
   })
   type: FieldType;

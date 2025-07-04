@@ -26,7 +26,7 @@ export class Relationship {
   destinationTableId: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: RelationshipType,
   })
   type: RelationshipType;

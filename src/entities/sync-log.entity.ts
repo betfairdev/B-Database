@@ -24,7 +24,7 @@ export class SyncLog {
   rowId: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: SyncOperation,
   })
   operation: SyncOperation;
